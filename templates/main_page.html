@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+    <link href="{% static 'bootstrap-5.2.3/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'ion-rangeslider/css/ion.rangeSlider.min.css' %}" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/fruit.png' %}">
+</head>
+<body>
+
+<nav class="navbar" style="background-color: #fcc5a3">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'img/fruit.png' %}" width="30" height="24" class="d-inline-block align-text-top">
+            MyFruitShop
+        </a>
+        <span class="navbar-text">
+          {% csrf_token %}
+        <form class="d-flex" method="post">
+            <input class="form-control me-2" type="text" placeholder="Login" aria-label="Login">
+            <input class="form-control me-2" type="password" placeholder="Password" aria-label="Password">
+            <button class="btn btn-danger rounded-4" type="submit" >Login</button>
+        </form>
+      </span>
+
+
+    </div>
+
+</nav>
+<div class="container-fluid mt-2">
+<div class="row">
+  <div class="col">
+    <table class="table table-bordered text-center">
+        <thead>
+        <tr>
+        <th colspan="4" class="text-center">Table Name</th>
+        </tr>
+        <tr class="table-light">
+            <th>Name</th>
+            <th>Amount</th>
+            <th width="300">Actions</th>
+            <th>Last transaction</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for fruit in fruits %}
+            <tr>
+                <td>
+                    {{ fruit.name }}
+                </td>
+                <td>
+                    {{ fruit.quantity }}
+                </td>
+                <td>
+                    <div class="input-group input-group-sm">
+                      <input type="text" class="form-control-sm me-2 form-control" placeholder="Numer" aria-label="Numer">
+                      <div class="input-group-append">
+                        <button class="btn rounded-4" type="button" style="background-color: #78f579">Buy</button>
+                        <button class="btn rounded-4" type="button" style="background-color: #f8d06f">Sell</button>
+                      </div>
+                    </div>
+                </td>
+            <td>test</td>
+            </tr>
+        {% endfor %}
+
+
+        </tbody>
+    </table>
+  <div class="row">
+      <div class="col">
+          <textarea id="chat-log" class="form-control" rows="10" readonly></textarea><br>
+          <div class="d-flex align-items-center">
+              <input class="form-control me-2" type="text"
+                 name="message" id="message" placeholder="Message" aria-label="Message">
+          <button class="btn btn-danger rounded-4" type="button">Send</button>
+          </div>
+      </div>
+      <div class="col border border-1 form-control text-center">
+          <strong class="fs-3">Bank</strong>
+          <table class="table table-bordered">
+              <thead>
+              <tr>
+                  <th>Bank account:</th>
+                  <th class="text-warning">200<strong> USD</strong></th>
+              </tr>
+              </thead>
+          </table>
+          <div class="row">
+              <div class="col">
+                  <button class="btn rounded-4 w-100" style="background-color: #d63384"
+                          type="button">Spend accounting<br> audit</button>
+              </div>
+              <div class="col">
+                  <input type="range" id="range1" aria-label="Audit percent">
+              </div>
+          </div>
+          <div class="row">
+              <div class="col">
+                  <input class="form-control mb-3 mt-3 me-2" type="text"
+                 name="amount" id="amount" placeholder="Amount" aria-label="Amount">
+              </div>
+              <div class="col">
+                  <div class="row mt-3">
+                      <div class="col">
+                        <button class="btn rounded-4 w-100" style="background-color: #78f579"
+                          type="button">Cash in</button>
+                      </div>
+                      <div class="col">
+
+                          <button class="btn rounded-4 w-100" style="background-color: #f8d06f"
+                          type="button">Cash out</button></div>
+                  </div>
+              </div>
+          </div>
+          <div class="row">
+              <div class="col">
+                  <button class="btn rounded-4 w-100" style="background-color: #0dcaf0"
+                          type="button">Download declarations</button>
+              </div>
+              <div class="col text-start mt-2">
+                  Downloaded today: <span id="decl_download">0</span>
+              </div>
+          </div>
+      </div>
+  </div>
+  </div>
+  <div class="col-3">
+    <textarea id="chat-log" class="form-control" rows="31" readonly></textarea><br>
+  </div>
+</div>
+</div>
+
+
+{#<textarea name="" id="" cols="30" rows="10"></textarea>#}
+{#<textarea id="chat-log" cols="100" rows="20"></textarea><br>#}
+{#<input id="chat-message-input" type="text" size="100"><br>#}
+{#<input id="chat-message-submit" type="button" value="Send">#}
+{#{{ room_name|json_script:"room-name" }}#}
+<script src="{% static 'bootstrap-5.2.3/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'jquery/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'ion-rangeslider/js/ion.rangeSlider.min.js' %}"></script>
+<script>
+      $('#range1').ionRangeSlider({
+      min     : 0,
+      max     : 100,
+      type    : 'single',
+      step    : 5,
+      postfix : '%',
+      prettify: false,
+      hasGrid : true
+    })
+</script>
+
+
+<script>
+    const roomName = JSON.parse(document.getElementById('room-name').textContent);
+
+    const chatSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/chat/'
+        + roomName
+        + '/'
+    );
+
+    chatSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        document.querySelector('#chat-log').value += (data.message + '\n');
+    };
+
+    chatSocket.onclose = function (e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-input').focus();
+    document.querySelector('#chat-message-input').onkeyup = function (e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function (e) {
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+            'message': message
+        }));
+        messageInputDom.value = '';
+    };
+</script>
+</body>
+</html>
