@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import random
 
 import environ
 from pathlib import Path
@@ -34,7 +35,6 @@ DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(" ")
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "fruits",
+    "bank",
 ]
 
 ASGI_APPLICATION = "FruitShop.asgi.application"
@@ -80,6 +81,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "FruitShop.wsgi.application"
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -94,7 +103,6 @@ DATABASES = {
         "PORT": env("POSTGRES_PORT"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -114,7 +122,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -125,7 +132,6 @@ TIME_ZONE = "Europe/Kiev"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -141,6 +147,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Celery settings
+BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 # CELERY_BEAT_SCHEDULE = {
@@ -149,3 +156,15 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 #         "schedule": crontab(minute=0, hour="0"),
 #     },
 # }
+
+# Additional Celery settings
+CELERY_BEAT_SCHEDULE = {
+    "task_buy_fruits": {
+        "task": "fruits.tasks.task_buy_fruits",  # Update with the path to your task
+        "schedule": 5,  # Repeat every 5 seconds
+    },
+    "task_sell_fruits": {
+        "task": "fruits.tasks.task_sell_fruits",  # Update with the path to your task
+        "schedule": 10,  # Repeat every 5 seconds
+    },
+}

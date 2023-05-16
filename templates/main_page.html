@@ -57,8 +57,8 @@
                     <div class="input-group input-group-sm">
                       <input type="text" class="form-control-sm me-2 form-control" placeholder="Numer" aria-label="Numer">
                       <div class="input-group-append">
-                        <button class="btn rounded-4" type="button" style="background-color: #78f579">Buy</button>
-                        <button class="btn rounded-4" type="button" style="background-color: #f8d06f">Sell</button>
+                        <button class="btn rounded-4" type="button" style="background-color: #78f579" value="{{ fruit.id }}">Buy</button>
+                        <button class="btn rounded-4" type="button" style="background-color: #f8d06f" value="{{ fruit.id }}">Sell</button>
                       </div>
                     </div>
                 </td>
@@ -84,7 +84,7 @@
               <thead>
               <tr>
                   <th>Bank account:</th>
-                  <th class="text-warning">200<strong> USD</strong></th>
+                  <th class="text-warning"><span id="balance">{{ bank.balance }}</span><strong> USD</strong></th>
               </tr>
               </thead>
           </table>
@@ -128,7 +128,11 @@
   </div>
   </div>
   <div class="col-3">
-    <textarea id="chat-log" class="form-control" rows="31" readonly></textarea><br>
+      <div style="width: 450px; height: 750px;  overflow: auto;" class="form-control">
+  <div contenteditable="true" style="width: 100%; height: 100%;"  id="fruit-log">
+  </div>
+</div>
+{#    <textarea id="fruit-log" class="form-control" rows="31" readonly></textarea><br>#}
   </div>
 </div>
 </div>
@@ -142,6 +146,7 @@
 <script src="{% static 'bootstrap-5.2.3/js/bootstrap.min.js' %}"></script>
 <script src="{% static 'jquery/jquery-3.7.0.min.js' %}"></script>
 <script src="{% static 'ion-rangeslider/js/ion.rangeSlider.min.js' %}"></script>
+<script src="{% static 'moment-js/moment.js' %}"></script>
 <script>
       $('#range1').ionRangeSlider({
       min     : 0,
@@ -156,39 +161,41 @@
 
 
 <script>
-    const roomName = JSON.parse(document.getElementById('room-name').textContent);
-
-    const chatSocket = new WebSocket(
+    const fruitLog = $('#fruit-log')
+    const status_colors={
+        'SUSSES' : 'green',
+        'ERROR' : 'red'
+    }
+    const bank_balance = $('#balance')
+    const fruitSocket = new WebSocket(
         'ws://'
         + window.location.host
-        + '/ws/chat/'
-        + roomName
-        + '/'
+        + '/ws/fruits/'
     );
 
-    chatSocket.onmessage = function (e) {
+    fruitSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
-        document.querySelector('#chat-log').value += (data.message + '\n');
+        let date = moment().format('DD.MM.YYYY H:mm:ss')
+        fruitLog.append(`<span style="color: ${status_colors[data.message['status']]};">
+                        ${date} - ${data.message['status']}: ${data.message['text']}</span></br>`)
     };
 
-    chatSocket.onclose = function (e) {
-        console.error('Chat socket closed unexpectedly');
+    fruitSocket.onclose = function (e) {
+        console.error('Fruit socket closed unexpectedly');
+    };
+    const balanceSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/balance/'
+    );
+    balanceSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        console.log(data)
+        bank_balance.text(data.balance)
     };
 
-    document.querySelector('#chat-message-input').focus();
-    document.querySelector('#chat-message-input').onkeyup = function (e) {
-        if (e.keyCode === 13) {  // enter, return
-            document.querySelector('#chat-message-submit').click();
-        }
-    };
-
-    document.querySelector('#chat-message-submit').onclick = function (e) {
-        const messageInputDom = document.querySelector('#chat-message-input');
-        const message = messageInputDom.value;
-        chatSocket.send(JSON.stringify({
-            'message': message
-        }));
-        messageInputDom.value = '';
+    balanceSocket.onclose = function (e) {
+        console.error('Fruit socket closed unexpectedly');
     };
 </script>
 </body>
