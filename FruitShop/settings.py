@@ -162,9 +162,16 @@ CELERY_BEAT_SCHEDULE = {
     "task_buy_fruits": {
         "task": "fruits.tasks.task_buy_fruits",  # Update with the path to your task
         "schedule": 5,  # Repeat every 5 seconds
+        'options': {'queue': 'fruits'}
     },
     "task_sell_fruits": {
         "task": "fruits.tasks.task_sell_fruits",  # Update with the path to your task
         "schedule": 10,  # Repeat every 5 seconds
+        'options': {'queue': 'fruits'}
     },
+    # "task_check_warehouse": {
+    #     "task": "fruits.tasks.task_check_warehouse",  # Update with the path to your task
+    #     "schedule": 10,  # Repeat every 5 seconds
+    #     'options': {'queue': 'fruits'}
+    # },
 }

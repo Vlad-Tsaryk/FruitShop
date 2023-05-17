@@ -13,5 +13,10 @@ app = Celery("FruitShop")
 #   should have a `CELERY_` prefix.
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
+app.conf.task_routes = {
+    'fruits.tasks.task_buy_fruits': {'queue': 'fruits'},
+    'fruits.tasks.task_sell_fruits': {'queue': 'fruits'},
+    'bank.tasks.task_check_warehouse': {'queue': 'warehouse'}
+                        }
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()

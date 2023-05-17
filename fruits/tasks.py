@@ -1,10 +1,11 @@
+import datetime
 import random
 from celery import shared_task
-from time import sleep
 
 from celery.utils.log import get_task_logger
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.core.cache import cache
 
 from bank.models import Bank
 from fruits.models import Fruit
@@ -15,16 +16,22 @@ fruits = Fruit.objects.all()
 
 
 @shared_task()
-def task_buy_fruits(fruit=None, quantity=random.randint(1, 20)):
+def task_buy_fruits(fruit_id: int = None, quantity: int = random.randint(1, 20)):
     price = random.randint(1, 4)
     total_price = quantity * price
     bank = Bank.objects.first()
     balance = bank.balance
     channel_layer = get_channel_layer()
-    if not fruit:
+    if not fruit_id:
         fruit = random.choice(fruits)
+    else:
+        fruit = Fruit.objects.get(id=fruit_id)
+    fruit_name = fruit.name.lower()
     if balance - total_price > 0:
+
         fruit.quantity += quantity
+        fruit.last_transaction = f'{datetime.datetime.now().strftime("%d.%m.%Y %H:%M")}' \
+                                 f' bought {quantity} {fruit_name}s for {total_price}USD'
         fruit.save()
         balance -= total_price
         bank.balance = balance
@@ -36,11 +43,11 @@ def task_buy_fruits(fruit=None, quantity=random.randint(1, 20)):
                 'balance': balance
             })
         status = 'SUSSES'
-        message = f'The supplier has brought {quantity} {fruit.name.lower()}s.' \
+        message = f'The supplier has brought {quantity} {fruit_name}s.' \
                   f'{total_price} USD have been deducted from the account, the purchase is complete.'
     else:
         status = 'ERROR'
-        message = f'The supplier has brought {quantity} {fruit.name.lower()}s.' \
+        message = f'The supplier has brought {quantity} {fruit_name}s.' \
                   f' Insufficient funds in the account, the purchase is canceled.'
 
     async_to_sync(channel_layer.group_send)(
@@ -55,18 +62,22 @@ def task_buy_fruits(fruit=None, quantity=random.randint(1, 20)):
 
 
 @shared_task()
-def task_sell_fruits(fruit=None):
-    quantity = random.randint(1, 10)
+def task_sell_fruits(fruit_id: int = None, quantity: int = random.randint(1, 10)):
     price = random.randint(1, 6)
     total_price = quantity * price
     bank = Bank.objects.first()
     balance = bank.balance
     channel_layer = get_channel_layer()
-    if not fruit:
+    if not fruit_id:
         fruit = random.choice(fruits)
+    else:
+        fruit = Fruit.objects.get(id=fruit_id)
+    fruit_name = fruit.name.lower()
     fruit_quantity = fruit.quantity
     if fruit_quantity - quantity >= 0:
         fruit.quantity = fruit_quantity - quantity
+        fruit.last_transaction = f'{datetime.datetime.now().strftime("%d.%m.%Y %H:%M")}' \
+                                 f' sold {quantity} {fruit_name}s for {total_price}USD'
         fruit.save()
         balance += total_price
         bank.balance = balance
@@ -79,11 +90,11 @@ def task_sell_fruits(fruit=None):
             })
 
         status = 'SUSSES'
-        message = f'The buyer bought {quantity} {fruit.name.lower()}s.' \
+        message = f'The buyer bought {quantity} {fruit_name}s.' \
                   f'{total_price} USD have been credited to the account, the sale is complete.'
     else:
         status = 'ERROR'
-        message = f'The supplier has brought {quantity} {fruit.name.lower()}s.' \
+        message = f'The supplier has brought {quantity} {fruit_name}s.' \
                   f' Lack of production, the sale is canceled.'
     async_to_sync(channel_layer.group_send)(
         'fruit_updates',

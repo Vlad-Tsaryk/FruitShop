@@ -6,6 +6,7 @@
     <title>Chat Room</title>
     <link href="{% static 'bootstrap-5.2.3/css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'ion-rangeslider/css/ion.rangeSlider.min.css' %}" rel="stylesheet">
+    <link href="{% static 'toastr/toastr.min.css' %}" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{% static 'img/fruit.png' %}">
 </head>
 <body>
@@ -21,7 +22,7 @@
         <form class="d-flex" method="post">
             <input class="form-control me-2" type="text" placeholder="Login" aria-label="Login">
             <input class="form-control me-2" type="password" placeholder="Password" aria-label="Password">
-            <button class="btn btn-danger rounded-4" type="submit" >Login</button>
+            <button class="btn btn-danger rounded-4" type="submit">Login</button>
         </form>
       </span>
 
@@ -30,111 +31,130 @@
 
 </nav>
 <div class="container-fluid mt-2">
-<div class="row">
-  <div class="col">
-    <table class="table table-bordered text-center">
-        <thead>
-        <tr>
-        <th colspan="4" class="text-center">Table Name</th>
-        </tr>
-        <tr class="table-light">
-            <th>Name</th>
-            <th>Amount</th>
-            <th width="300">Actions</th>
-            <th>Last transaction</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for fruit in fruits %}
-            <tr>
-                <td>
-                    {{ fruit.name }}
-                </td>
-                <td>
-                    {{ fruit.quantity }}
-                </td>
-                <td>
-                    <div class="input-group input-group-sm">
-                      <input type="text" class="form-control-sm me-2 form-control" placeholder="Numer" aria-label="Numer">
-                      <div class="input-group-append">
-                        <button class="btn rounded-4" type="button" style="background-color: #78f579" value="{{ fruit.id }}">Buy</button>
-                        <button class="btn rounded-4" type="button" style="background-color: #f8d06f" value="{{ fruit.id }}">Sell</button>
-                      </div>
+    <div class="row">
+        <div class="col">
+            <table class="table table-bordered text-center">
+                <thead>
+                <tr>
+                    <th colspan="4" class="text-center">Table Name</th>
+                </tr>
+                <tr class="table-light">
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th width="300">Actions</th>
+                    <th>Last transaction</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for fruit in fruits %}
+                    <tr>
+                        <td>
+                            {{ fruit.name }}
+                        </td>
+                        <td>
+                            {{ fruit.quantity }}
+                        </td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control-sm me-2 form-control" placeholder="Numer"
+                                       aria-label="Numer" id="fruit_quantity_inp_{{ fruit.id }}">
+                                <div class="input-group-append">
+                                    <button class="btn rounded-4 buy-btn" type="button"
+                                            style="background-color: #78f579"
+                                            value="{{ fruit.id }}">Buy
+                                    </button>
+                                    <button class="btn rounded-4 sell-btn" type="button"
+                                            style="background-color: #f8d06f"
+                                            value="{{ fruit.id }}">Sell
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                        <td id="last_transaction_{{ fruit.id }}">{{fruit.last_transaction}}</td>
+                    </tr>
+                {% endfor %}
+
+
+                </tbody>
+            </table>
+            <div class="row">
+                <div class="col">
+                    <textarea id="chat-log" class="form-control" rows="10" readonly></textarea><br>
+                    <div class="d-flex align-items-center">
+                        <input class="form-control me-2" type="text"
+                               name="message" id="message" placeholder="Message" aria-label="Message">
+                        <button class="btn btn-danger rounded-4" type="button">Send</button>
                     </div>
-                </td>
-            <td>test</td>
-            </tr>
-        {% endfor %}
+                </div>
+                <div class="col border border-1 form-control text-center">
+                    <strong class="fs-3">Bank</strong>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Bank account:</th>
+                            <th class="text-warning"><span id="balance">{{ bank.balance }}</span><strong> USD</strong>
+                            </th>
+                        </tr>
+                        </thead>
+                    </table>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn rounded-4 w-100" style="background-color: #d63384" id="audit_btn"
+                                    type="button">Spend accounting<br> audit
+                            </button>
+                        </div>
+                        <div class="col">
+                            <div class="progress mt-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
+                                     aria-valuemax="100" id="audit_progress">0%
+                                </div>
+                            </div>
+                            {#                  <input type="range" id="range1" aria-label="Audit percent">#}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control mb-3 mt-3 me-2" type="text"
+                                   name="amount" id="amount" placeholder="Amount" aria-label="Amount">
+                        </div>
+                        <div class="col">
+                            <div class="row mt-3">
+                                <div class="col">
+                                    <button class="btn rounded-4 w-100" style="background-color: #78f579"
+                                            type="button" id="cash_in">Cash in
+                                    </button>
+                                </div>
+                                <div class="col">
 
-
-        </tbody>
-    </table>
-  <div class="row">
-      <div class="col">
-          <textarea id="chat-log" class="form-control" rows="10" readonly></textarea><br>
-          <div class="d-flex align-items-center">
-              <input class="form-control me-2" type="text"
-                 name="message" id="message" placeholder="Message" aria-label="Message">
-          <button class="btn btn-danger rounded-4" type="button">Send</button>
-          </div>
-      </div>
-      <div class="col border border-1 form-control text-center">
-          <strong class="fs-3">Bank</strong>
-          <table class="table table-bordered">
-              <thead>
-              <tr>
-                  <th>Bank account:</th>
-                  <th class="text-warning"><span id="balance">{{ bank.balance }}</span><strong> USD</strong></th>
-              </tr>
-              </thead>
-          </table>
-          <div class="row">
-              <div class="col">
-                  <button class="btn rounded-4 w-100" style="background-color: #d63384"
-                          type="button">Spend accounting<br> audit</button>
-              </div>
-              <div class="col">
-                  <input type="range" id="range1" aria-label="Audit percent">
-              </div>
-          </div>
-          <div class="row">
-              <div class="col">
-                  <input class="form-control mb-3 mt-3 me-2" type="text"
-                 name="amount" id="amount" placeholder="Amount" aria-label="Amount">
-              </div>
-              <div class="col">
-                  <div class="row mt-3">
-                      <div class="col">
-                        <button class="btn rounded-4 w-100" style="background-color: #78f579"
-                          type="button">Cash in</button>
-                      </div>
-                      <div class="col">
-
-                          <button class="btn rounded-4 w-100" style="background-color: #f8d06f"
-                          type="button">Cash out</button></div>
-                  </div>
-              </div>
-          </div>
-          <div class="row">
-              <div class="col">
-                  <button class="btn rounded-4 w-100" style="background-color: #0dcaf0"
-                          type="button">Download declarations</button>
-              </div>
-              <div class="col text-start mt-2">
-                  Downloaded today: <span id="decl_download">0</span>
-              </div>
-          </div>
-      </div>
-  </div>
-  </div>
-  <div class="col-3">
-      <div style="width: 450px; height: 750px;  overflow: auto;" class="form-control">
-  <div contenteditable="true" style="width: 100%; height: 100%;"  id="fruit-log">
-  </div>
-</div>
-{#    <textarea id="fruit-log" class="form-control" rows="31" readonly></textarea><br>#}
-  </div>
-</div>
+                                    <button class="btn rounded-4 w-100" style="background-color: #f8d06f"
+                                            type="button" id="cash_out">Cash out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn rounded-4 w-100" style="background-color: #0dcaf0"
+                                    type="button">Download declarations
+                            </button>
+                        </div>
+                        <div class="col text-start mt-2">
+                            Downloaded today: <span id="decl_download">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div style="width: 450px; height: 750px;  overflow: auto;" class="form-control">
+                <div contenteditable="true" style="width: 100%; height: 100%;" id="fruit-log">
+                </div>
+            </div>
+            {#    <textarea id="fruit-log" class="form-control" rows="31" readonly></textarea><br>#}
+        </div>
+    </div>
 </div>
 
 
@@ -147,26 +167,29 @@
 <script src="{% static 'jquery/jquery-3.7.0.min.js' %}"></script>
 <script src="{% static 'ion-rangeslider/js/ion.rangeSlider.min.js' %}"></script>
 <script src="{% static 'moment-js/moment.js' %}"></script>
+<script src="{% static 'toastr/toastr.min.js' %}"></script>
 <script>
-      $('#range1').ionRangeSlider({
-      min     : 0,
-      max     : 100,
-      type    : 'single',
-      step    : 5,
-      postfix : '%',
-      prettify: false,
-      hasGrid : true
+    $('#range1').ionRangeSlider({
+        min: 0,
+        max: 100,
+        type: 'single',
+        step: 5,
+        postfix: '%',
+        prettify: false,
+        hasGrid: true
     })
 </script>
 
 
 <script>
     const fruitLog = $('#fruit-log')
-    const status_colors={
-        'SUSSES' : 'green',
-        'ERROR' : 'red'
+    const status_colors = {
+        'SUSSES': 'green',
+        'ERROR': 'red'
     }
     const bank_balance = $('#balance')
+    const audit_progress = $('#audit_progress')
+
     const fruitSocket = new WebSocket(
         'ws://'
         + window.location.host
@@ -183,6 +206,24 @@
     fruitSocket.onclose = function (e) {
         console.error('Fruit socket closed unexpectedly');
     };
+
+    $('.sell-btn').on('click', (event) =>
+        fruitSocket.send(JSON.stringify({
+            'action': 'sell', 'fruit_id': event.target.value,
+            'quantity': $('#fruit_quantity_inp_' + event.target.value).val()
+        }))
+    )
+    $('.buy-btn').on('click', function (event) {
+        console.log('aaaaaaaaaaaa')
+        let fruit_id = event.target.value
+        let quantity = $('#fruit_quantity_inp_' + event.target.value).val()
+        fruitSocket.send(JSON.stringify({
+                'action': 'buy', 'fruit_id': fruit_id,
+                'quantity': quantity
+            })
+        )
+    })
+
     const balanceSocket = new WebSocket(
         'ws://'
         + window.location.host
@@ -191,12 +232,90 @@
     balanceSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         console.log(data)
-        bank_balance.text(data.balance)
+        if (data.balance) {
+            bank_balance.text(data.balance);
+        } else {
+            audit_progress.css('width', data.progress + '%')
+            audit_progress.text(data.progress + '%')
+            console.log(typeof data.progress)
+            if (data.progress < 100) {
+                console.log("NOT 100")
+                $('#audit_btn').prop("disabled", true);
+            } else {
+                $('#audit_btn').prop("disabled", false);
+                toastr.success("Accounting audit successfully completed!", "Success")
+            }
+        }
+
     };
 
     balanceSocket.onclose = function (e) {
         console.error('Fruit socket closed unexpectedly');
     };
+</script>
+<script>
+    $('#audit_btn').on('click', () => startAudit())
+
+    function startAudit() {
+        $.ajax({
+            url: '{% url "start_audit" %}',
+            type: 'GET',
+            success: (data) => {
+                toastr.success("Accounting audit started!", "Success")
+            },
+            error: (error) => {
+            },
+        })
+    }
+
+    $('#cash_in').on('click', () => cashOperation('in'))
+    $('#cash_out').on('click', () => cashOperation('out'))
+
+    function cashOperation(action) {
+        let link
+        if (action === 'in') {
+            link =
+            {% url "cash_in" %}
+        } else {
+            link =
+            {% url "cash_out" %}
+        }
+        $.ajax({
+            url: link,
+            type: 'GET',
+            data: {
+                'money': $('#amount').val()
+            },
+            success: (data) => {
+                toastr.success(data.success, "Success")
+                bank_balance.text(data['balance'])
+            },
+            error: (error) => {
+            },
+        })
+    }
+    function updateFruitTransactions() {
+        $.ajax({
+        url: '{% url 'get_last_transactions' %}',
+        type: 'GET',
+        success: (data) => {
+            console.log(data)
+            for (let fruitId in data.success) {
+                $('#last_transaction_' + fruitId).text(data.success[fruitId])
+            }
+        },
+        complete: function () {
+            // Schedule the next request when the current one's complete
+            setInterval(updateFruitTransactions, 10000); // The interval set to 5 seconds
+        },
+        error: (error) => {
+        },
+    })
+    }
+    updateFruitTransactions()
+
+
+
 </script>
 </body>
 </html>
