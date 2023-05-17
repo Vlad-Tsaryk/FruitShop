@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('fruits', '0002_alter_fruit_options'),
+        ("fruits", "0002_alter_fruit_options"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fruit',
-            name='last_transaction',
+            model_name="fruit",
+            name="last_transaction",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
     ]

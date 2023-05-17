@@ -8,4 +8,4 @@ class Fruit(models.Model):
     last_transaction = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]

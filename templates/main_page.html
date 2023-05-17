@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>Chat Room</title>
+    <title>Fruit Shop</title>
     <link href="{% static 'bootstrap-5.2.3/css/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'ion-rangeslider/css/ion.rangeSlider.min.css' %}" rel="stylesheet">
     <link href="{% static 'toastr/toastr.min.css' %}" rel="stylesheet">
@@ -19,11 +19,21 @@
         </a>
         <span class="navbar-text">
           {% csrf_token %}
-        <form class="d-flex" method="post">
-            <input class="form-control me-2" type="text" placeholder="Login" aria-label="Login">
-            <input class="form-control me-2" type="password" placeholder="Password" aria-label="Password">
+            {% if user.is_authenticated %}
+                <div>
+              {{ user.email }}
+              <a class="btn btn-danger rounded-4" href="{% url 'logout' %}">Logout</a>
+          </div>
+            {% else %}
+                <form class="d-flex" method="post" action="{% url 'login' %}">
+          {% csrf_token %}
+            <input class="form-control me-2" type="text" name="username" placeholder="Login" aria-label="Login">
+            <input class="form-control me-2" type="password" name="password" placeholder="Password"
+                   aria-label="Password">
             <button class="btn btn-danger rounded-4" type="submit">Login</button>
         </form>
+            {% endif %}
+
       </span>
 
 
@@ -42,7 +52,7 @@
                     <th>Name</th>
                     <th>Amount</th>
                     <th width="300">Actions</th>
-                    <th>Last transaction</th>
+                    <th style="max-width:400px; width: 400px">Last transaction</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -70,7 +80,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td id="last_transaction_{{ fruit.id }}">{{fruit.last_transaction}}</td>
+                        <td id="last_transaction_{{ fruit.id }}">{{ fruit.last_transaction }}</td>
                     </tr>
                 {% endfor %}
 
@@ -79,11 +89,12 @@
             </table>
             <div class="row">
                 <div class="col">
-                    <textarea id="chat-log" class="form-control" rows="10" readonly></textarea><br>
+                    <textarea id="chat_log" class="form-control" rows="10" readonly>
+                        {% for message in messages %}{{ message }}{% endfor %}</textarea><br>
                     <div class="d-flex align-items-center">
-                        <input class="form-control me-2" type="text"
-                               name="message" id="message" placeholder="Message" aria-label="Message">
-                        <button class="btn btn-danger rounded-4" type="button">Send</button>
+                        <input class="form-control me-2" type="text" name="message" id="chat_input"
+                               placeholder="Message" aria-label="Message">
+                        <button class="btn btn-danger rounded-4" type="button" id="chat_btn">Send</button>
                     </div>
                 </div>
                 <div class="col border border-1 form-control text-center">
@@ -190,6 +201,7 @@
     const bank_balance = $('#balance')
     const audit_progress = $('#audit_progress')
 
+    ////FRUIT SOCKET////
     const fruitSocket = new WebSocket(
         'ws://'
         + window.location.host
@@ -198,9 +210,14 @@
 
     fruitSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
-        let date = moment().format('DD.MM.YYYY H:mm:ss')
-        fruitLog.append(`<span style="color: ${status_colors[data.message['status']]};">
+        if (data.balance) {
+            bank_balance.text(data.balance);
+        } else {
+            let date = moment().format('DD.MM.YYYY H:mm:ss')
+            fruitLog.append(`<span style="color: ${status_colors[data.message['status']]};">
                         ${date} - ${data.message['status']}: ${data.message['text']}</span></br>`)
+        }
+
     };
 
     fruitSocket.onclose = function (e) {
@@ -224,33 +241,29 @@
         )
     })
 
-    const balanceSocket = new WebSocket(
+    ////AUDIT SOCKET////
+    const auditSocket = new WebSocket(
         'ws://'
         + window.location.host
-        + '/ws/balance/'
+        + '/ws/audit/{{ user.id }}/'
     );
-    balanceSocket.onmessage = function (e) {
+    auditSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         console.log(data)
-        if (data.balance) {
-            bank_balance.text(data.balance);
+        audit_progress.css('width', data.progress + '%')
+        audit_progress.text(data.progress + '%')
+        console.log(typeof data.progress)
+        if (data.progress < 100) {
+            console.log("NOT 100")
+            $('#audit_btn').prop("disabled", true);
         } else {
-            audit_progress.css('width', data.progress + '%')
-            audit_progress.text(data.progress + '%')
-            console.log(typeof data.progress)
-            if (data.progress < 100) {
-                console.log("NOT 100")
-                $('#audit_btn').prop("disabled", true);
-            } else {
-                $('#audit_btn').prop("disabled", false);
-                toastr.success("Accounting audit successfully completed!", "Success")
-            }
+            $('#audit_btn').prop("disabled", false);
+            toastr.success("Accounting audit successfully completed!", "Success")
         }
-
     };
 
-    balanceSocket.onclose = function (e) {
-        console.error('Fruit socket closed unexpectedly');
+    auditSocket.onclose = function (e) {
+        console.error('Audit socket closed unexpectedly');
     };
 </script>
 <script>
@@ -294,28 +307,68 @@
             },
         })
     }
+
     function updateFruitTransactions() {
         $.ajax({
-        url: '{% url 'get_last_transactions' %}',
-        type: 'GET',
-        success: (data) => {
-            console.log(data)
-            for (let fruitId in data.success) {
-                $('#last_transaction_' + fruitId).text(data.success[fruitId])
-            }
-        },
-        complete: function () {
-            // Schedule the next request when the current one's complete
-            setInterval(updateFruitTransactions, 10000); // The interval set to 5 seconds
-        },
-        error: (error) => {
-        },
-    })
+            url: '{% url 'get_last_transactions' %}',
+            type: 'GET',
+            success: (data) => {
+                console.log(data)
+                for (let fruitId in data.success) {
+                    $('#last_transaction_' + fruitId).text(data.success[fruitId])
+                }
+            },
+            error: (error) => {
+            },
+        })
     }
-    updateFruitTransactions()
 
-
-
+    $(document).ready(function () {
+        setInterval(updateFruitTransactions,10000);
+    });
 </script>
+<script>
+    const chatLog = $('#chat_log')
+    const chatInput = $('#chat_input')
+    ////CHAT SOCKET////
+    const chatSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/chat/'
+    );
+
+    chatSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        console.log(data)
+        chatLog.val(chatLog.val() + data.message)
+        {#fruitLog.append(`<span style="color: ${status_colors[data.message['status']]};">#}
+        {#                ${date} - ${data.message['status']}: ${data.message['text']}</span></br>`)#}
+    };
+
+    chatSocket.onclose = function (e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+    $('#chat_btn').on('click', () => {
+        let chatInput = $('#chat_input')
+        chatSocket.send(JSON.stringify({
+            'message': chatInput.val()
+        }))
+        chatInput.val('');
+
+    })
+</script>
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% elif message.tags == 'info' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% elif message.tags == 'warning' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% elif message.tags == 'error' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
 </body>
 </html>

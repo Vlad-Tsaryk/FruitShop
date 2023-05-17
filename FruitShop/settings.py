@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 import random
+from datetime import timedelta
 
 import environ
 from pathlib import Path
@@ -38,7 +39,7 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(" ")
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "fruits",
     "bank",
+    "users",
 ]
 
 ASGI_APPLICATION = "FruitShop.asgi.application"
@@ -136,10 +138,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -150,6 +152,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+
+
 # CELERY_BEAT_SCHEDULE = {
 #     "sample_task": {
 #         "task": "Swipe.users.tasks.renew_subscriptions_task",
@@ -157,21 +161,23 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 #     },
 # }
 
+
 # Additional Celery settings
-CELERY_BEAT_SCHEDULE = {
-    "task_buy_fruits": {
-        "task": "fruits.tasks.task_buy_fruits",  # Update with the path to your task
-        "schedule": 5,  # Repeat every 5 seconds
-        'options': {'queue': 'fruits'}
-    },
-    "task_sell_fruits": {
-        "task": "fruits.tasks.task_sell_fruits",  # Update with the path to your task
-        "schedule": 10,  # Repeat every 5 seconds
-        'options': {'queue': 'fruits'}
-    },
-    # "task_check_warehouse": {
-    #     "task": "fruits.tasks.task_check_warehouse",  # Update with the path to your task
-    #     "schedule": 10,  # Repeat every 5 seconds
-    #     'options': {'queue': 'fruits'}
-    # },
-}
+# CELERY_BEAT_SCHEDULE = {
+#     "task_buy_fruits": {
+#         "task": "fruits.tasks.task_buy_fruits",
+#         "schedule": 5,
+#         'options': {'queue': 'fruits'}
+#     },
+#     "task_sell_fruits": {
+#         "task": "fruits.tasks.task_sell_fruits",
+#         "schedule": 10,
+#         'options': {'queue': 'fruits'}
+#     },
+#     # "task_joker": {
+#     #     "task": "users.tasks.task_joker",
+#     #     "schedule": 20,
+#     #     'options': {'queue': 'fruits'}
+#     # },
+#
+# }
