@@ -17,6 +17,7 @@ daphne = "^4.0.0"
 channels-redis = "^4.1.0"
 flower = "^1.2.0"
 requests = "^2.30.0"
+gunicorn = "^20.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

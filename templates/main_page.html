@@ -62,7 +62,8 @@
                             {{ fruit.name }}
                         </td>
                         <td>
-                            {{ fruit.quantity }}
+                            <span id="quantity_fruit_{{ fruit.id }}">{{ fruit.quantity }}</span>
+
                         </td>
                         <td>
                             <div class="input-group input-group-sm">
@@ -148,13 +149,38 @@
                     <div class="row">
                         <div class="col">
                             <button class="btn rounded-4 w-100" style="background-color: #0dcaf0"
-                                    type="button">Download declarations
+                                    type="button" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop">Upload declarations
                             </button>
                         </div>
                         <div class="col text-start mt-2">
-                            Downloaded today: <span id="decl_download">0</span>
+                            Uploaded today: <span id="decl_download">{{ declarations_today }}</span>
                         </div>
                     </div>
+                    <!-- Modal -->
+                    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false"
+                         tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Upload your file</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                </div>
+                                <form method="post" action="{% url 'upload_declaration' %}"
+                                      enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                <div class="modal-body">
+                                    <input type="file" class="form-control" name="file" required>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Upload</button>
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -179,6 +205,11 @@
 <script src="{% static 'ion-rangeslider/js/ion.rangeSlider.min.js' %}"></script>
 <script src="{% static 'moment-js/moment.js' %}"></script>
 <script src="{% static 'toastr/toastr.min.js' %}"></script>
+<script>
+    toastr.options = {
+        "positionClass": "toast-top-center",
+    }
+</script>
 <script>
     $('#range1').ionRangeSlider({
         min: 0,
@@ -216,6 +247,7 @@
             let date = moment().format('DD.MM.YYYY H:mm:ss')
             fruitLog.append(`<span style="color: ${status_colors[data.message['status']]};">
                         ${date} - ${data.message['status']}: ${data.message['text']}</span></br>`)
+            $('#quantity_fruit_'+data.message.fruit_id).text(data.message.quantity)
         }
 
     };
@@ -231,7 +263,6 @@
         }))
     )
     $('.buy-btn').on('click', function (event) {
-        console.log('aaaaaaaaaaaa')
         let fruit_id = event.target.value
         let quantity = $('#fruit_quantity_inp_' + event.target.value).val()
         fruitSocket.send(JSON.stringify({
@@ -240,7 +271,7 @@
             })
         )
     })
-
+    {% if user.is_authenticated %}
     ////AUDIT SOCKET////
     const auditSocket = new WebSocket(
         'ws://'
@@ -265,9 +296,7 @@
     auditSocket.onclose = function (e) {
         console.error('Audit socket closed unexpectedly');
     };
-</script>
-<script>
-    $('#audit_btn').on('click', () => startAudit())
+        $('#audit_btn').on('click', () => startAudit())
 
     function startAudit() {
         $.ajax({
@@ -280,6 +309,13 @@
             },
         })
     }
+    {% else %}
+        $('#audit_btn').on('click', () => toastr.error("Login to start audit"))
+    {% endif %}
+
+</script>
+<script>
+
 
     $('#cash_in').on('click', () => cashOperation('in'))
     $('#cash_out').on('click', () => cashOperation('out'))
@@ -349,11 +385,15 @@
         console.error('Chat socket closed unexpectedly');
     };
     $('#chat_btn').on('click', () => {
+        {% if user.is_authenticated %}
         let chatInput = $('#chat_input')
         chatSocket.send(JSON.stringify({
             'message': chatInput.val()
         }))
         chatInput.val('');
+        {% else %}
+            toastr.error('You need to login to send messages')
+        {% endif %}
 
     })
 </script>

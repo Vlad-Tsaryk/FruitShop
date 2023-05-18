@@ -1,11 +1,10 @@
 import datetime
 import random
-from celery import shared_task
-from celery.schedules import crontab
 
+from asgiref.sync import async_to_sync
+from celery import shared_task
 from celery.utils.log import get_task_logger
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 
 from bank.models import Bank
 from fruits.models import Fruit
@@ -17,7 +16,7 @@ fruits = Fruit.objects.all()
 
 @shared_task(bind=True)
 def task_buy_fruits(
-    self, fruit_id: int = None, quantity: int = random.randint(1, 20), reply=False
+        self, fruit_id: int = None, quantity: int = random.randint(1, 20), reply=False
 ):
     price = random.randint(1, 4)
     total_price = quantity * price
@@ -56,7 +55,8 @@ def task_buy_fruits(
 
     async_to_sync(channel_layer.group_send)(
         "fruit_updates",
-        {"type": "fruit.update", "message": {"text": message, "status": status}},
+        {"type": "fruit.update", "message": {"text": message, "status": status, 'fruit_id': fruit.id,
+                                             'quantity': fruit.quantity}},
     )
     if reply:
         task_buy_fruits.apply_async(
@@ -66,7 +66,7 @@ def task_buy_fruits(
 
 @shared_task(bind=True)
 def task_sell_fruits(
-    self, fruit_id: int = None, quantity: int = random.randint(1, 10), reply=False
+        self, fruit_id: int = None, quantity: int = random.randint(1, 10), reply=False
 ):
     price = random.randint(1, 6)
     total_price = quantity * price
@@ -106,7 +106,8 @@ def task_sell_fruits(
         )
     async_to_sync(channel_layer.group_send)(
         "fruit_updates",
-        {"type": "fruit.update", "message": {"text": message, "status": status}},
+        {"type": "fruit.update", "message": {"text": message, "status": status, 'fruit_id': fruit.id,
+                                             'quantity': fruit_quantity - quantity}},
     )
     if reply:
         task_sell_fruits.apply_async(

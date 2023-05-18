@@ -12,10 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 import random
 from datetime import timedelta
-
-import environ
 from pathlib import Path
 
+import environ
 from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,9 +45,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users",
     "fruits",
     "bank",
-    "users",
+
 ]
 
 ASGI_APPLICATION = "FruitShop.asgi.application"
@@ -87,7 +87,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [(env("REDIS_HOST"), 6379)],
         },
     },
 }
@@ -174,8 +174,8 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 #         "schedule": 10,
 #         'options': {'queue': 'fruits'}
 #     },
-#     # "task_joker": {
-#     #     "task": "users.tasks.task_joker",
+#     # "task_jester": {
+#     #     "task": "users.tasks.task_jester",
 #     #     "schedule": 20,
 #     #     'options': {'queue': 'fruits'}
 #     # },

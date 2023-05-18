@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 
-from bank.models import Bank
+from bank.models import Bank, Declaration
 from fruits.models import Fruit
 from users.models import Message
 
@@ -11,10 +12,11 @@ def index(request):
     fruits = Fruit.objects.all()
     bank = Bank.objects.first()
     messages = Message.objects.all()[:40][::-1]
+    declarations_today = Declaration.objects.filter(date=timezone.now()).count()
     return render(
         request,
         "main_page.html",
-        context={"fruits": fruits, "bank": bank, "messages": messages},
+        context={"fruits": fruits, "bank": bank, "messages": messages, 'declarations_today': declarations_today},
     )
 
 

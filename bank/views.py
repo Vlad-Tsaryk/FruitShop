@@ -1,8 +1,9 @@
 from django.core.cache import cache
+from django.core.cache import cache
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect
 
-from .models import Bank
+from .models import Bank, Declaration
 from .tasks import task_check_warehouse
 
 
@@ -55,3 +56,13 @@ def cash_out(request):
                 {"error": "Balance cannot be less then zero"}, status=400
             )
     return JsonResponse({}, status=405)
+
+
+def upload_declaration(request):
+    if request.method == "POST":
+        file = request.FILES.get('file')
+        if file:
+            Declaration.objects.create(
+                file=file
+            )
+    return redirect('start_page')

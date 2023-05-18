@@ -19,7 +19,7 @@ app.conf.task_routes = {
     "fruits.tasks.task_buy_fruits": {"queue": "fruits"},
     "fruits.tasks.task_sell_fruits": {"queue": "fruits"},
     "bank.tasks.task_check_warehouse": {"queue": "warehouse"},
-    "users.tasks.task_joker": {"queue": "fruits"},
+    "users.tasks.task_jester": {"queue": "fruits"},
 }
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
