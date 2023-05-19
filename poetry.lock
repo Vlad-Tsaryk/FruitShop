@@ -641,27 +641,6 @@ pytz = "*"
 tornado = ">=5.0.0,<7.0.0"
 
 [[package]]
-name = "gunicorn"
-version = "20.1.0"
-description = "WSGI HTTP Server for UNIX"
-category = "main"
-optional = false
-python-versions = ">=3.5"
-files = [
-    {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
-    {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
-]
-
-[package.dependencies]
-setuptools = ">=3.0"
-
-[package.extras]
-eventlet = ["eventlet (>=0.24.1)"]
-gevent = ["gevent (>=1.4.0)"]
-setproctitle = ["setproctitle"]
-tornado = ["tornado (>=0.2)"]
-
-[[package]]
 name = "humanize"
 version = "4.6.0"
 description = "Python humanize utilities"
@@ -1224,6 +1203,24 @@ doc = ["sphinx"]
 test = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "supervisor"
+version = "4.2.5"
+description = "A system for controlling process state under UNIX"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "supervisor-4.2.5-py2.py3-none-any.whl", hash = "sha256:2ecaede32fc25af814696374b79e42644ecaba5c09494c51016ffda9602d0f08"},
+    {file = "supervisor-4.2.5.tar.gz", hash = "sha256:34761bae1a23c58192281a5115fb07fbf22c9b0133c08166beffc70fed3ebc12"},
+]
+
+[package.dependencies]
+setuptools = "*"
+
+[package.extras]
+testing = ["pytest", "pytest-cov"]
+
+[[package]]
 name = "tornado"
 version = "6.3.2"
 description = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed."
@@ -1455,4 +1452,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ca09460e090aeec622e591616696dde9b511d8d5f9d77d81404bbec6ef2e3875"
+content-hash = "53e88ddd49d9331a4841a6a0aa7043520643dee7c6b978cff419e98ff59f99a9"

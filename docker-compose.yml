@@ -5,7 +5,7 @@ services:
     restart: on-failure
     volumes:
       - static_volume:/home/app/fruit_shop/static
-      - media_volume:/home/app/fruit_shop/media
+      - media_volume:/mnt/volume-fra1-01/media
     ports:
       - "80:80"
     depends_on:
@@ -14,24 +14,23 @@ services:
   web:
     build: .
     restart: always
-    command: sh -c "python3 manage.py migrate && python3 manage.py init_users
+    command: sh -c "python3 manage.py migrate
       && python3 manage.py collectstatic --no-input
-      && python3 manage.py runserver
-      && gunicorn FruitShop.wsgi:application --bind 0.0.0.0:8000"
+      && daphne -b 0.0.0.0 -p 8000 FruitShop.asgi:application"
     volumes:
       - static_volume:/home/app/fruit_shop/static
-      - media_volume:/home/app/fruit_shop/media
+      - media_volume:/mnt/volume-fra1-01/media
     env_file:
       - ./.env
     depends_on:
       - db
 
-  db:
-    image: postgres:14.6
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - ./.env
+#  db:
+#    image: postgres:14.6
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data/
+#    env_file:
+#      - ./.env
   redis:
       image: redis:alpine
       restart: always
@@ -52,16 +51,6 @@ services:
       env_file:
         - ./.env
 
-
-#  celery-beat:
-#      restart: always
-#      build:
-#        context: .
-#      command: celery -A Swipe worker --beat --scheduler django --loglevel=info
-#      env_file:
-#        - ./.env
-#      depends_on:
-#        - celery
 volumes:
   static_volume:
   media_volume:

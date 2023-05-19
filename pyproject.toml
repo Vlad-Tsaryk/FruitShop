@@ -9,15 +9,15 @@ readme = "README.md"
 python = "^3.10"
 django = "^3.2.19"
 channels = "^4.0.0"
+channels-redis = "^4.1.0"
 django-environ = "^0.10.0"
 psycopg2-binary = "^2.9.6"
 celery = "^5.2.7"
 redis = "^4.5.5"
 daphne = "^4.0.0"
-channels-redis = "^4.1.0"
 flower = "^1.2.0"
 requests = "^2.30.0"
-gunicorn = "^20.1.0"
+supervisor = "^4.2.5"
 
 
 [tool.poetry.group.dev.dependencies]
